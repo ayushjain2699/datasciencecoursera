@@ -1,4 +1,4 @@
-setwd(".//train")
+setwd("./UCI HAR Dataset/test")
 x = read.table("X_train.txt")
 y = read.table("y_train.txt")
 s = read.table("subject_train.txt")
