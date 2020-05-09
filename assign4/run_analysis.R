@@ -1,4 +1,5 @@
 setwd("./UCI HAR Dataset/train")
+library(dplyr)
 x = read.table("X_train.txt")
 y = read.table("y_train.txt")
 s = read.table("subject_train.txt")
@@ -21,10 +22,11 @@ test = cbind(s,y,x)
 final = rbind(test,train)
 t = factor(final$activity,labels = c("walking","walking_upstairs","walking_downstairs","sitting","standing","laying"))
 final$activity = t
-features = filter(features,c)
+features = features[c,]
 feature_names = features$V2
 coln = c("Subject","Activity",feature_names)
 colnames(final) = coln
 temp = final%>% group_by(Subject,Activity)%>%summarise_at(vars(`tBodyAcc-mean()-X`:`fBodyBodyGyroJerkMag-meanFreq()`),mean)
 temp = as.data.frame(temp)
 final2 = temp[,1:42]
+write.table(final2,file = "final.txt",row.names = F)
