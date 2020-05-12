@@ -1,0 +1,98 @@
+Reproducible Research: Peer Assessment 1
+==========================
+## Loading and Preprocessing the data  
+```{r,results="hide"}
+data = read.csv("activity.csv")
+data1 = data[complete.cases(data),]
+```
+
+## Histogram of the total number of steps in each day  
+```{r}
+library(ggplot2)
+library(dplyr)
+data$date = as.Date(data$date)
+data1$date = as.Date(data1$date)
+y = tapply(data1$steps,data1$date,sum)
+x = unique(data1$date)
+ques_1 = data.frame("date" = x,"Total" = y)
+z = rep(ques_1$date,ques_1$Total)
+z = as.data.frame(z)
+names(z) = "Date"
+f = ggplot(z,aes(x = Date))
+f+geom_histogram(binwidth=1)+ggtitle("Total Steps")
+```
+
+## Mean and Median number of steps  
+The following table shows the mean and median of the total number of steps in each day.  
+```{r,results = "asis"}
+summaryy = data1%>%group_by(date)%>%summarise(mean = mean(steps),median = median(steps))
+summaryy = data.frame(summaryy)
+library(xtable)
+summaryy$date = as.character(summaryy$date)
+tab = xtable(summaryy)
+print(tab,type = "html")
+```
+
+## Average number of steps taken  
+```{r}
+data2 = data1
+avg = data2%>%group_by(interval)%>%summarise(average = mean(steps))
+with(avg,plot(interval,average,type = "l",ylab = "Average Steps"))
+```
+  
+## The interval with maximum number of steps  
+```{r}
+index = which.max(avg$average)
+max_interval = avg[index,1]
+i = max_interval[[1]]
+i
+```
+The interval with maximum number of steps is **`r i`**.
+
+## Imputing the missing data  
+The missing values in each interval is replaced with the average number of steps taken in that interval averaged over the total days.  
+```{r}
+total_missing = sum(is.na(data$steps))
+total_missing
+filled_data = data
+for(i in 1:nrow(data)){
+        if(is.na(filled_data[i,1])){
+                c = avg$interval%in%filled_data[i,3]
+                filled_data[i,1] = avg[c,2]
+        }
+}
+```
+
+## Histogram of the total number of steps taken each day after missing values are imputed  
+```{r}
+y_new = tapply(filled_data$steps,filled_data$date,sum)
+x_new = unique(filled_data$date)
+ques_3 = data.frame("date" = x_new,"Total" = y_new)
+z_new = rep(ques_3$date,round(ques_3$Total))
+z_new = as.data.frame(z_new)
+names(z_new) = "Date"
+f2 = ggplot(z_new,aes(x = Date))
+f2+geom_histogram(binwidth=1)+ggtitle("Total Steps")
+```
+
+## Mean and Median after imputing the values  
+The following table shows the mean and the median of the total number of steps of each day afte imputing the missing values.  
+```{r,results = "asis"}
+summaryy2 = filled_data%>%group_by(date)%>%summarise(mean = mean(steps),median = median(steps))
+summaryy2 = data.frame(summaryy2)
+summaryy2$date = as.character(summaryy2$date)
+tab = xtable(summaryy2)
+print(tab,type = "html")
+```
+  
+**Since the missing values corresponded to one whole single day. Imputing the values doesn't have any effect on the mean and the median of the other days.**
+
+## Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends  
+```{r}
+filled_data$day = factor(weekdays(filled_data$date)%in%c("Saturday","Sunday"),labels = c("Weekdays","weekends"))
+avg2 = filled_data%>%group_by(interval,day)%>%summarise(average = mean(steps))
+g = ggplot(avg2,aes(interval,average))
+g + geom_line()+facet_grid(day~.)
+```
+  
+**This panel plot clearly shows that the number of steps taken on weekdays is higher than the number of steps taken on weekends.**
