@@ -1,0 +1,122 @@
+Health and Economic effects of various storms
+======================================================
+
+## Synopsis  
+- This data analysis tells us about the top 10 events which are most harmful with respect to the public health across the United States.  
+- The effect of the storm on the population health is measured by the number of fatalities and the inijuries that it has caused from 1950 till the end in November 2011.  
+- This data analysis also tells us about the top 10 events which have greatest economic consequences across th United States.  
+- The economic consequences are measured as the damage expenses on the property and the crop due to these activities.  
+- Total expenditure is calculated which is the sum of the expenditure of the crop and the property and the top 10 Events are reported.  
+- Note that the data corresponding to missing values in either the fatalities/Injuries or the damage expenses have been ignored in this data analysis.  
+
+## Data Processing  
+Following is the code for loading and preprocessing the data.  
+
+```{r,cache=T}
+data = read.csv("repdata_data_StormData.csv")
+```
+
+Now, the data is pre-processed and only the relavant columnns which are necessary for the health analysis are extracted and grouped by the events.  
+Note: The events having zero fatalities and injuries are ignored.    
+
+```{r,cache=T}
+ques_1 = data[,c(8,23,24)]
+library(dplyr)
+data2 = ques_1%>%group_by(EVTYPE)%>%summarise_at(c("FATALITIES","INJURIES"),sum,na.rm = T)
+library(ggplot2)
+cond1 = data2$FATALITIES==0
+cond2 = data2$INJURIES==0
+cond = cond1&cond2
+fdata=data2[!cond,]
+fdata$total = fdata$FATALITIES+fdata$INJURIES
+fdata = arrange(fdata,desc(total))
+```
+
+Further more, a new data frame is created after extracting the relavent columns which are necessary for the measurememt of the total damage that the event has caused.  
+Also, only those entries having a proped Damage EXP is taken into account.  
+
+```{r,cachce = T}
+ques_2 = data[,c(8,25,26,27,28)]
+cond = ques_2$PROPDMG==0&ques_2$CROPDMG==0
+fdata2 = ques_2[!cond,]
+final = grepl("b|k|K|m|M",fdata2$PROPDMGEXP)
+prop_data = fdata2[final,c(1,2,3)]
+final = grepl("b|k|K|m|M",fdata2$CROPDMGEXP)
+crop_data = fdata2[final,c(1,4,5)]
+```
+
+Now, the actual expenditure is calculated by multiplying the expenditure values with its respective scale i.e B for Billions, K for Thousands and M for Millions.  
+
+```{r,cache = T}
+for(i in 1:nrow(crop_data)){
+        if(crop_data[i,3]%in%c("m","M")){
+                crop_data[i,2] = crop_data[i,2]*1000000
+        }
+        else if(crop_data[i,3]=="B"){
+                crop_data[i,2] = crop_data[i,2]*1000000000
+        }
+        else{
+                crop_data[i,2] = crop_data[i,2]*1000
+        }
+}
+for(i in 1:nrow(prop_data)){
+        if(prop_data[i,3]%in%c("m","M")){
+                prop_data[i,2] = prop_data[i,2]*1000000
+        }
+        else if(prop_data[i,3]=="B"){
+                prop_data[i,2] = prop_data[i,2]*1000000000
+        }
+        else{
+                prop_data[i,2] = prop_data[i,2]*1000
+        }
+}
+```
+
+The data is now grouped by the event type and then merged to form a single frame with the total expenditure.  
+
+```{r,cache = T}
+prop_data2 = prop_data%>%group_by(EVTYPE)%>%summarise(total_exp = sum(PROPDMG))
+crop_data2 = crop_data%>%group_by(EVTYPE)%>%summarise(total_exp = sum(CROPDMG))
+dmg = merge(prop_data2,crop_data2,by.x = "EVTYPE",by.y= "EVTYPE",all = F)
+dmg$total = (dmg$total_exp.x+dmg$total_exp.y)/1000000
+dmg = arrange(dmg,desc(total))
+```
+
+## Results  
+Following is the plot for the top 10 events having worse health effects across the United States.  
+
+```{r,cache = T}
+q = ggplot(fdata[1:10,],aes(EVTYPE,INJURIES))
+q = q + geom_col()+theme(axis.text=element_text(size=3))
+p = ggplot(fdata[1:10,],aes(EVTYPE,FATALITIES))
+p = p + geom_col()+theme(axis.text=element_text(size=3))
+library(ggpubr)
+ggarrange(q,p,ncol=2,nrow = 1)
+```
+
+Following is the table of the top 10 events that has the most adverse affect on the population health.  
+
+```{r,cache = T,results = "asis"}
+df1 = data.frame("Rank" = 1:10,"Events" = fdata$EVTYPE[1:10])
+library(xtable)
+t = xtable(df1)
+print(t,type = "html")
+```
+
+The following plot shows the total expenditure of the top 10 events. 
+
+```{r,cache = T}
+q1 = ggplot(dmg[1:10,],aes(EVTYPE,total))
+q1 + geom_col()+theme(axis.text=element_text(size=6))+labs(title = "Total expenditure in millions of top 10 events")
+```
+
+The following is the table of the top 10 events which has the most adverse effect on the economy.  
+```{r,cache = T,results="asis"}
+df2 = data.frame("Rank" = 1:10,"Events" = dmg$EVTYPE[1:10])
+library(xtable)
+t = xtable(df2)
+print(t,type = "html")
+```
+  
+  
+ 
