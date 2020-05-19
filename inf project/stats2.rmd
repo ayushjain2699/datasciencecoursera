@@ -1,0 +1,48 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+Inferential Data Analysis
+====================================
+
+## Loading the Data Set and Basic Exploratory Analysis   
+```{r}
+data = ToothGrowth
+library(ggplot2)
+g = ggplot(data,aes(supp,len))
+qplot(dose,len,data = data,col = supp)
+```
+
+This plot shows that for two types of supplements measurementa of tooth length is taken for three different groups.  
+Let's now plot a panel boxplot to get a clear idea of the data.  
+```{r}
+g+geom_boxplot(color = "blue")+facet_grid(.~dose)
+```
+
+We can infer from this plot that it would be interesting to analyse the data dose-wise and compare which supplement was better.  
+Following is the summary of the data dose-wise.
+```{r}
+l = lapply(unique(data$dose),function(x) summary(subset(data,dose==x)))
+names(l) = c("0.5","1.0","2.0")
+l
+```
+
+## Confidence Intervals for different Doses  
+
+Lets analyse this dataset for different doses and compare which supplement resulted in longer tooth length.  
+FOr this let's do the two groups t-statistic analysis for different doses and check the confidence interval of the difference of the mean of the two groups, or in other words test the alternate hypothesis of unequal mean with the null hypothesis of equal mean.  
+```{r}
+l = lapply(c(0.5,1,2),function(x) t.test(len~supp,data = subset(data,dose == x),paired = F,var.equal = F)$conf)
+names(l) = c("0.5","1.0","2.0")
+l
+```
+
+## Conslusions  
+### Assumptions:  
+- I have assumed that the two groups are not paired.  
+- Looking at the initial plots, I have also made the assumption of unequal variances.  
+
+### Results:  
+- It is clear from the Confidence Interval that for the dose of 0.5 and 1.0, the interval is positive i.e. samples with OJ have longer length with the confidence of 95%. Hence, we reject the null hypothesis.  
+- However for 2.0 dose, the interval has both negative and positive values of the difference of the mean. Hence we cannot say that they perfom differently, in other words we cannot reject the null hypothesis.  

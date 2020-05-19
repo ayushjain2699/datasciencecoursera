@@ -1,0 +1,64 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+Simulating Exponential Distributions
+==================================================
+
+## Overview  
+- The following report shows that the sample mean and the sample standard deviation are good estimator of the population mean and standard deviation respectively.  
+- This report also verifies the Central Limit Theorem.  
+
+## Simulations  
+The following code takes sample size of 40 and calculates the sample mean. This is simulated 1000 times and stored in the vector x_bars.  
+This also calculated the standard deviation of the simulated data and stores it in the vector s.  
+
+```{r}
+x_bars = sapply(1:1000,function(x) mean(rexp(40,0.2)))
+library(ggplot2)
+x_bars = data.frame(x_bars)
+s = sapply(1:1000,function(x) sd(rexp(40,0.2)))
+s = data.frame(s)
+```
+
+## Sample Mean versus Theoretical Mean  
+
+```{r}
+g = ggplot(x_bars,aes(x_bars))
+mu_est = mean(x_bars$x_bars)
+diff = abs(mu_est-5)
+g+geom_histogram(binwidth = 0.3,fill = "blue",color = "black")+geom_vline(xintercept = mu_est,size = 1)+geom_vline(xintercept = 5,size = 1,col = "red")+labs(title = "Distribution of sample mean")
+```
+
+Note that the histogram of the sample mean of the simulated data is plotted along with the theoretical mean.  
+The red line indicates the theoretical mean and the black line is the mean of the simulated data.  
+This figure clearly shows that the distribution of the simulated data is centered around the theoretical mean. 
+The difference between the sample mean and the theoretical mean is **`r diff`**, which is fairly small.  
+
+## Sample Variance versus Theoretical Variance  
+
+```{r}
+g = ggplot(s,aes(s))
+sd_est = mean(s$s)
+diff2 = abs(sd_est-5)
+g + geom_histogram(binwidth = 0.3,color = "black",fill = "red") + geom_vline(xintercept = 5,color = "blue",size = 1) + geom_vline(xintercept = mean(s$s),size = 1)+labs(title = "Distribution of sample standard deviation")
+```
+
+Note that the histogram of the sample standard deviation of the simulated data is plotted along with the theoretical standard deviation.  
+The blue line indicates the theoretical standard deviation and the black line is the standard deviation of the simulated data.  
+This figure clearly shows that the distribution of the simulated data is centered around the theoretical standard deviation. 
+The difference between the sample standard deviation and the theoretical standard deviation is *`r diff2`* and thus the difference between their variances is the square of it which is **`r abs((sd_est)^2-25)`**, which is fairly small.  
+
+## Distribution  
+
+```{r}
+x_sn = (x_bars-mu_est)/sd(x_bars$x_bars)
+g = ggplot(x_sn,aes(x = x_bars))
+g+geom_histogram(aes(y = ..density..),binwidth = 0.3,color = "black",fill = "blue")+stat_function(fun = dnorm,args = list(mean = mean(x_sn$x_bars),sd = sd(x_sn$x_bars)),size = 2)+labs(title = "Sample mean distribution and normal distribution")
+```
+
+This plot shows that the sample mean distribution is approximately equal to the normal distribution.  
+As the normal distribution almost overlays the sample mean plot.  
+

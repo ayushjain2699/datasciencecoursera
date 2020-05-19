@@ -1,0 +1,98 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+Effect or transmission on MPG
+=======================================
+
+## Executive Summary  
+
+```{r,echo = F,results='hide',include=F}
+data = mtcars
+library(GGally)
+data$am = factor(mtcars$am,labels = c("automatic","manual"))
+f3 = lm(mpg~disp+am+wt+hp,data = data)
+```
+
+- Overall, this analysis suggests that the mpg for **manual trannsmission is better than that of the automatic transmission**.  
+- It suggests that keeping the other covariates constant, the mean mpg for manual transmission is greater than that of automatc transmission by *`r summary(f3)$coefficients[3,1]`* with the p-value of  *`r summary(f3)$coefficients[3,4]`*.  
+- This behavior can also be shown using the two sided t test as shown below.    
+
+```{r,echo = F}
+t.test(mpg~am,data = data,paired = F)$conf
+```
+ 
+The confidence interval lies entirely below zero suggesting that mpg for manual transmission is better than that of the automatic transmission.  
+
+## Basic Exploratory Analysis   
+
+```{r,echo=F,fig.height=3,fig.width=6}
+library(ggplot2)
+data = mtcars
+data$am = factor(mtcars$am,labels = c("automatic","manual"))
+g = ggplot(data = data,aes(y = mpg,x = am,fill = am))
+g+geom_boxplot()
+```
+
+This plot gives a rough estimate that the mpg for manual is better than that of automatic transmission.  
+Let's dig into it and try to fit a linear regression model which may give a better picture of it.  
+We also find that:  
+- cyl,gear and carb are discrete variables.  
+- vs and am are factor variables.  
+-  mpg,disp,hp,drat,wt and qsec are continuous variables.  
+
+## Model Selection
+
+```{r,echo = F}
+f = lm(mpg~.,data = data)
+hatvalues(f)
+```
+
+The hatvalues suggests that there is no such potential influencer in our data set that we may need to look upon.  
+
+Let's fit the model with different parameters depending upon their correlation with the mpg and see which one fits the best.   
+
+```{r,echo = F}
+f1 = lm(mpg~disp,data = data)
+f1 = lm(mpg~disp+am,data = data)
+f2 = lm(mpg~disp+am+wt,data = data)
+f3 = lm(mpg~disp+am+wt+hp,data = data)
+f4 = lm(mpg~disp+am+wt+hp+drat,data = data)
+f5 = lm(mpg~disp+am+wt+hp+drat+qsec,data = data)
+anova(f1,f2,f3,f4,f5)
+```
+
+As we can see that model 2 performs better than the first model and the model 3 perfoms even better than the model 2 with the F value of apprx. 0.0026.  
+After that the F value increases which suggests that the later models are not good.    
+This analayis of variance suggests that the third model is best among all of them.   
+  
+## Analysing  
+
+```{r,echo = F,fig.height=3,fig.width=6}
+d = cbind(predict(f3),resid(f3),data$am)
+d = data.frame(d)
+g = ggplot(d,aes(X1,X2))
+g+geom_point(aes(color = X3))+ggtitle("Residuals vs Fitted")+labs(x = "fitted",y = "residuals")
+```
+
+There is no such significant pattern in the residuals and the fitted values as such.  
+
+```{r,echo = F}
+summary(f3)$coefficients
+```
+
+The coefficient corresponding to "ammanual" suggests that keeping the other covariates constant, the **mean mpg for manual transmission is greater than that of automatc transmission** by `r summary(f3)$coefficients[3,1]` with the p-value of  `r summary(f3)$coefficients[3,4]`.  
+Also the coefficient corresponding to displ suggests that there is a very *minor increase in the mpg with displacement* keeping other covariates constant.  
+The coefficient corresponding to weight suggests that *wt has a negative impact on the the mpg* keeping others constant.  
+Also, there is a very *minor decrease in the mpg with hp* keeping other covariates constant.  
+
+## Appendix Figures  
+```{r,cache = T,echo = F}
+data$vs = factor(data$vs)
+g = ggpairs(data)
+g
+par(mfrow = c(2,2))
+plot(f3)
+```
+  
