@@ -1,0 +1,65 @@
+Predicting "HOW" the exercise was done
+==================================================
+
+```{r,echo = F,cache = T}
+train = read.csv("train.csv")
+l = grepl("^min|^var|^ampli|^max|^avg|^std|^kurtosis|^skewness",names(train))
+train= train[,!l]
+train = train[,-c(1:7)]
+library(caret)
+ll = grepl("^total|^roll|^pitch|^yaw",names(train))
+train2 = train[,!ll]
+```
+
+## Choosing the Covariates    
+
+On looking at the training data set, It is observed that there are many variable and all these must not be used in training the model.  
+Let's first try to choose the relavant parameters from the variables.  
+On looking at there values, many variables has "NA" in them and also are not useful in predicting the classe.  
+Also, variable starting with "min","max","var","std","kurtosis","skewness" are ignored because these parameters are highly related to the other parameters.  
+Note that I have also eliminated the variable with "total","roll","pitch" and "yaw", as i think other variables i.e. gyros, acceler and magnet are more relavant for determining the classe.  
+
+After all this the final data frame consistes of 37 variables including the "classe" variable.  
+Now let's check whether these variable have near zero variances so that we could ignore that.  
+
+```{r,echo = F,cache = T}
+nearZeroVar(train2[,-37],saveMetrics = T)
+```
+
+It shows that none of the variables have near zero variances.  
+
+Next I did the principal component analysis after scaling to get the principle components that capture 90% of the variation in the data.  
+
+```{r,echo = T,cache = T}
+set.seed(33733)
+pca = preProcess(train2[,-37],method = c("center","scale","pca"),thresh = 0.9)
+pca
+train_pca = predict(pca,train2[,-37])
+df = data.frame(train$classe,train_pca)
+```
+
+This shows that 14 components are able to capture 90% of the variation in the data.  
+
+## Model Fitting  
+
+```{r,echo = T,cache = T}
+trcntrl = trainControl(method = "cv",number = 4)
+fit2 = train(train.classe~.,data = df,method = "rf",trControl = trcntrl)
+```
+
+### Cross Validation  
+
+The cross validation used here is 4-fold cross valudation to get the estimate the out of sample error rates.  
+Also, The model selected for this type is **Random Forest**.  
+The result of the model fit is shown below.  
+
+```{r,cache = T,echo = F}
+fit2
+```
+
+This model perform pretty good on the training set with an out of sample error estimate of **over 90%**.
+
+### Out of sample rate  
+
+This model shows an estimated out of sample error estimate of around **96%** which is a pretty good rate.  
+
