@@ -9,8 +9,11 @@ shinyUI(fluidPage(
                checkboxInput("show_lm","Show/Hide Regression Line")
         ),
         mainPanel(
-            h3(textOutput("title")),
-            plotOutput("plot")
+            tabsetPanel(
+                type = "tab",
+                tabPanel("Plot",br(),h3(textOutput("title")),plotOutput("plot")),
+                tabPanel("Documentation",br(),textOutput("Doc"))
+            )
         )
     )
 ))

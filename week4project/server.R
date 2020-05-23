@@ -17,6 +17,11 @@ shinyServer(function(input, output) {
                 g + geom_point(aes_string(color = input$factor))
             }
     })
+    output$Doc = renderText({
+        t = "You need to select the variable against which the Mpg of the cars must be plotted. 
+        Also, you need to chose the factor variable that can be helpful in comparisions. Moreover
+        you can also choose to add a regression line that fits the model."
+    })
     output$title = renderText({
         paste("Mpg vs ",input$x)
     })

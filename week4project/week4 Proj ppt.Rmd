@@ -9,5 +9,62 @@ output: ioslides_presentation
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
+## URLs  
+Here are the URLs for my Shinny APP and the code on github.  
+- [Code](https://github.com/ayushjain2699/datasciencecoursera/tree/master/week4project)   
+- [Shinny App](https://ayushjain2699.shinyapps.io/week4project/?_ga=2.160344635.746648575.1590229231-1541850619.1590229231)  
+
 ## Overview  
-Here are the URLs for my Shinny APP and the code on github
+The App plays with the mtcars data set that comes with the base R package.  
+It Plots a graph with Mpg on it's Y axis and takes the input for the X axis.  
+It also asks for the factor variable and the regression line.    
+```{r,echo = T,comment=""}
+head(mtcars)
+```
+
+## UI Code
+
+```{r,eval=F,echo  =T}
+library(shiny)
+shinyUI(fluidPage(
+
+    titlePanel("Playing with mtcars data set"),
+    sidebarLayout(
+        sidebarPanel(
+               selectInput("x","Choose the x axis",
+                           choices = c("disp","hp","drat","wt","qsec")),
+               selectInput("factor","Choose the factor variable",
+                           c("gear","am","cyl")),
+               checkboxInput("show_lm","Show/Hide Regression Line")
+        ),
+        mainPanel(
+            h3(textOutput("title")),
+            plotOutput("plot")
+        )
+    )
+))
+
+```
+
+## Server Code  
+```{r,eval= F,echo = T,collapse=T}
+library(shiny)
+shinyServer(function(input, output) {
+    library(ggplot2)
+    data = mtcars
+    data$cyl = factor(data$cyl)
+    data$am = factor(data$am,labels = c("Automatic","Manual"))
+    data$gear = factor(data$gear)
+    output$plot = renderPlot({
+            g = ggplot(data,aes_string(x = input$x,y = "mpg"))
+            if(input$show_lm)
+            {
+                g + geom_point(aes_string(color = input$factor))
+                    +geom_smooth(method = "lm")
+            }
+            else{  g + geom_point(aes_string(color = input$factor))}
+    })
+    output$title = renderText({ paste("Mpg vs ",input$x)  })
+})
+
+```
