@@ -1,0 +1,27 @@
+---
+title: "Week 3 Assignment"
+author: "Ayush Jain"
+date: "5/23/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## PLOT
+
+```{r,cache = T}
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(plotly))
+mtcars$am = factor(mtcars$am,labels = c("Automatic","Manual"))
+mtcars$cyl = factor(mtcars$cyl)
+g = ggplot(mtcars,aes(x = wt,y = mpg))
+plot = g+geom_point(aes(color = cyl,size = (gear)))+facet_grid(.~am)+geom_smooth(method = "lm",aes(color = am),formula = y~x)+labs(title = "MPG vs Weight")
+gg = ggplotly(plot)
+gg
+
+```
+
+## Thank You

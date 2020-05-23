@@ -1,0 +1,50 @@
+Populations of 10 States of India
+=============================================
+## Date:  
+### 22-May-2020  
+
+### DATA SET  
+
+The following data is used to plot the map.  
+```{r,echo = F,results = "asis"}
+library(xtable)
+states = c("Andra Pradesh","Arunachal Pradesh","Assam","Bihar","Chattisgarh","Goa","Gujarat","Haryana","HP","Jharkhand")
+pop =c(49506799,1383727,31205576,104099452,25545198,1458545,60439692,25351462,6864602,32988134)
+lat = vector(length = 10)
+lng = vector(length = 10)
+lat[1] = 15.912900
+lng[2] = 79.739990
+lng[1] = 79.739990
+lat[2] = 27.593390
+lng[2] = 96.107370
+lat[3] = 26.200603
+lng[3] = 92.937576
+lat[4] = 25.096073
+lng[4] = 85.313118
+lat[5] = 21.218559
+lng[5] = 81.417503
+lat[6] = 15.40194
+lng[6] = 74.04333
+lat[7]=23.21667
+lng[7] = 72.68333
+lat[8] = 29.307487
+lng[8] = 76.049796
+lat[9] = 31.10333
+lng[9] = 77.17222
+lat[10] = 23.35
+lng[10] = 85.33
+df = data.frame(states,pop,lat,lng)
+df = xtable(df)
+print(df,type = "html")
+```
+
+### The Map  
+
+The following map shows the population of different states of India. You can hover to the marker to see the populations.  
+Note that the size of the circle is proportional to the population size.  
+```{r,echo = F,message=F}
+library(leaflet)
+my_map = df%>%leaflet()%>%addTiles()%>%addCircleMarkers(popup = as.character(df$pop),clusterOptions = markerClusterOptions(),color = "red",radius = sqrt(sqrt(df$pop/100)),weight = 1)
+my_map
+```
+
